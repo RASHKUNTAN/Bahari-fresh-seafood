@@ -1,38 +1,62 @@
 body {
     font-family: 'Segoe UI', sans-serif;
     margin: 0;
-    background-color: #f0f8ff; /* Light ocean blue */
+    /* This adds your wallpaper with a slight dark tint so text is readable */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('images/wallpaperbest.jpg.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     color: #333;
 }
 
 header {
-    background-color: #004a7c; /* Deep sea blue */
+    background-color: rgba(0, 74, 124, 0.9); /* Deep sea blue with slight transparency */
     color: white;
     text-align: center;
-    padding: 50px 20px;
+    padding: 60px 20px;
+}
+
+header h1 {
+    font-size: 3rem;
+    margin: 0;
+    letter-spacing: 2px;
 }
 
 .products {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    padding: 40px;
+    gap: 30px;
+    padding: 50px;
     flex-wrap: wrap;
 }
 
 .fish-card {
-    background: white;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.95); /* Semi-transparent white */
+    border-radius: 15px;
     padding: 20px;
-    width: 250px;
+    width: 280px;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+}
+
+.fish-card:hover {
+    transform: translateY(-10px); /* Lifts the card when you hover over it */
+}
+
+/* This styling ensures all your fish photos are the same size */
+.fish-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 15px;
 }
 
 .price {
     display: block;
     font-weight: bold;
-    font-size: 1.2em;
+    font-size: 1.4em;
     margin: 15px 0;
     color: #0077b6;
 }
@@ -41,12 +65,23 @@ header {
     background-color: #ff6f00; /* Bright orange for "Buy" */
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    padding: 12px 25px; 
+    border-radius: 30px; /* Rounded buttons */
     cursor: pointer;
     font-weight: bold;
+    font-size: 1rem;
+    width: 100%;
+    transition: background 0.3s;
 }
 
 .buy-btn:hover {
     background-color: #e65100;
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: 50px;
 }
