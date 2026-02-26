@@ -2,8 +2,35 @@
   "short_name": "BahariFresh",
   "name": "Bahari Fresh Seafood Market",
   "start_url": "index.html",
+  "scope": "./",
   "display": "standalone",
   "theme_color": "#004a7c",
   "background_color": "#ffffff",
-  "icons": [{ "src": "images/lobster.jpg.jpeg", "sizes": "192x192", "type": "image/jpeg" }]
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "images/lobster-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "images/lobster-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Orders",
+      "short_name": "Orders",
+      "url": "index.html#history",
+      "icons": [{ "src": "images/orders.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Basket",
+      "short_name": "Cart",
+      "url": "index.html#cart",
+      "icons": [{ "src": "images/cart.png", "sizes": "192x192" }]
+    }
+  ]
 }
