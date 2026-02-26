@@ -3,53 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bahari Fresh Seafood | From Ocean to Door</title>
+    <title>Bahari Fresh Seafood | Premium Market</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
-    <header>
-        <h1>BAHARI FRESH SEAFOOD</h1>
-        <p>Premium catches delivered straight from the ocean.</p>
+    <nav class="navbar">
+        <div class="logo">BAHARI FRESH</div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search catch of the day..." onkeyup="filterProducts()">
+        </div>
+        <ul class="nav-links">
+            <li id="auth-section"><a href="#" onclick="openModal('loginModal')">Login</a></li>
+            <li id="history-link" style="display:none;"><a href="#" onclick="openModal('historyModal')">My Orders</a></li>
+            <li><a href="#" class="cart-nav-btn" onclick="toggleCart()">🛒 Basket (<span id="cart-count">0</span>)</a></li>
+        </ul>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-overlay">
+            <h1>PREMIUM OCEAN FRESH SEAFOOD</h1>
+            <p>Sourced from the Coast, Delivered to Your Door.</p>
+            <a href="#products" class="cta-button">Start Shopping</a>
+        </div>
     </header>
 
-    <section class="products">
-        <div class="fish-card">
-            <img src="images/redsnapper.jpg.jpeg" alt="Red Snapper" class="fish-img">
-            <h3>Red Snapper</h3>
-            <p>Freshly caught this morning.</p>
-            <span class="price">$15.00 / kg</span>
-            <button class="buy-btn">Order Now</button>
-        </div>
+    <div class="main-container" id="products">
+        <aside class="category-sidebar">
+            <h3>Categories</h3>
+            <ul>
+                <li class="cat-item active" onclick="filterCategory('all', this)">All Items</li>
+                <li class="cat-item" onclick="filterCategory('whole', this)">Whole Fish</li>
+                <li class="cat-item" onclick="filterCategory('fillet', this)">Fillets</li>
+                <li class="cat-item" onclick="filterCategory('crustacean', this)">Crustaceans</li>
+            </ul>
+        </aside>
 
-        <div class="fish-card">
-            <img src="images/kingfish.jpg.jpeg" alt="Kingfish" class="fish-img">
-            <h3>Kingfish (Tuna)</h3>
-            <p>Perfect for steaks or grilling.</p>
-            <span class="price">$22.00 / kg</span>
-            <button class="buy-btn">Order Now</button>
-        </div>
+        <main class="products-section">
+            <div class="products-grid" id="productGrid">
+                <div class="fish-card" data-category="whole">
+                    <img src="images/redsnapper.jpg.jpeg" class="fish-img">
+                    <div class="card-info">
+                        <h3>Red Snapper</h3>
+                        <span class="price">$15.00 / kg</span>
+                        <div class="qty-control">
+                            <button onclick="changeQty('qty-snapper', -1)">-</button>
+                            <input type="number" id="qty-snapper" value="1" min="1">
+                            <button onclick="changeQty('qty-snapper', 1)">+</button>
+                        </div>
+                        <button class="add-btn" onclick="addToCart('Red Snapper', 15, 'qty-snapper')">Add to Cart</button>
+                    </div>
+                </div>
 
-        <div class="fish-card">
-            <img src="images/shrimps.jpg.jpeg" alt="Shrimps" class="fish-img">
-            <h3>Fresh Shrimps</h3>
-            <p>Perfect for steaks or grilling.</p>
-            <span class="price">$15.00 / kg</span>
-            <button class="buy-btn">Order Now</button>
-        </div>
+                <div class="fish-card" data-category="whole">
+                    <img src="images/kingfish.jpg.jpeg" class="fish-img">
+                    <div class="card-info">
+                        <h3>Kingfish</h3>
+                        <span class="price">$22.00 / kg</span>
+                        <div class="qty-control">
+                            <button onclick="changeQty('qty-king', -1)">-</button>
+                            <input type="number" id="qty-king" value="1" min="1">
+                            <button onclick="changeQty('qty-king', 1)">+</button>
+                        </div>
+                        <button class="add-btn" onclick="addToCart('Kingfish', 22, 'qty-king')">Add to Cart</button>
+                    </div>
+                </div>
 
-        <div class="fish-card">
-            <img src="images/lobster.jpg.jpeg" alt="Lobster" class="fish-img">
-            <h3>Fresh Lobster</h3>
-            <p>Live and ready for your pot.</p>
-            <span class="price">$35.00 / kg</span>
-            <button class="buy-btn">Order Now</button>
+                <div class="fish-card" data-category="crustacean">
+                    <img src="images/shrimps.jpg.jpeg" class="fish-img">
+                    <div class="card-info">
+                        <h3>Jumbo Shrimps</h3>
+                        <span class="price">$18.00 / kg</span>
+                        <div class="qty-control">
+                            <button onclick="changeQty('qty-shrimp', -1)">-</button>
+                            <input type="number" id="qty-shrimp" value="1" min="1">
+                            <button onclick="changeQty('qty-shrimp', 1)">+</button>
+                        </div>
+                        <button class="add-btn" onclick="addToCart('Jumbo Shrimps', 18, 'qty-shrimp')">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>Your Basket</h3>
+            <span class="close-cart" onclick="toggleCart()">&times;</span>
         </div>
-    </section>
+        <div id="cart-items-list"></div>
+        <div class="cart-footer">
+            <div class="total-row">
+                <span>Grand Total:</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <button class="checkout-btn" onclick="openPayment()">Cashout (M-Pesa)</button>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('paymentModal')">&times;</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" width="120">
+            <h3>Secure Checkout</h3>
+            <p id="pay-amount" style="font-weight:bold; font-size: 1.2rem;"></p>
+            <form onsubmit="initiateMpesa(event)">
+                <input type="tel" id="mpesa-phone" placeholder="Enter M-Pesa Number (e.g. 0796401465)" required>
+                <button type="submit" class="mpesa-green-btn">Send M-Pesa Prompt</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Sign In</h2>
+            <form onsubmit="handleAuth(event)">
+                <input type="text" id="userName" placeholder="Your Full Name" required>
+                <button type="submit" class="cta-button" style="width:100%">Enter Market</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content legal-content">
+            <span class="close" onclick="closeModal('historyModal')">&times;</span>
+            <h2>My Order History</h2>
+            <div id="order-history-list"></div>
+        </div>
+    </div>
 
     <footer>
-        <p>&copy; 2026 Bahari Fresh Seafood. Contact: +254796401465 FISH-NOW</p>
+        <p>&copy; 2026 Bahari Fresh Seafood | Contact: +254 796 401 465</p>
     </footer>
 
+    <script src="script.js"></script>
 </body>
 </html>

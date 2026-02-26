@@ -1,0 +1,9 @@
+{
+  "short_name": "BahariFresh",
+  "name": "Bahari Fresh Seafood Market",
+  "start_url": "index.html",
+  "display": "standalone",
+  "theme_color": "#004a7c",
+  "background_color": "#ffffff",
+  "icons": [{ "src": "images/lobster.jpg.jpeg", "sizes": "192x192", "type": "image/jpeg" }]
+}
