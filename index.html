@@ -8,7 +8,6 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="logo">🐟 BAHARI FRESH</div>
@@ -45,11 +44,12 @@
 
     <main class="products-section">
       <div class="products-grid" id="productGrid">
+        <!-- Product Cards -->
         <div class="fish-card" data-category="whole">
-          <img src="images/redsnapper.jpg.jpeg" class="fish-img">
+          <img src="images/redsnapper.jpg.jpeg" alt="Red Snapper" class="fish-img" loading="lazy">
           <div class="card-info">
             <h3>Red Snapper</h3>
-            <span class="price">KSh 1500 / kg</span>
+            <span class="price">KSh 1,500 / kg</span>
             <div class="qty-control">
               <button onclick="changeQty('qty-snapper', -1)">-</button>
               <input type="number" id="qty-snapper" value="1" min="1">
@@ -60,30 +60,58 @@
         </div>
 
         <div class="fish-card" data-category="whole">
-          <img src="images/kingfish.jpg.jpeg" class="fish-img">
+          <img src="images/tilapia.jpg.jpeg" alt="Tilapia" class="fish-img" loading="lazy">
           <div class="card-info">
-            <h3>Kingfish</h3>
-            <span class="price">KSh 2200 / kg</span>
+            <h3>Tilapia</h3>
+            <span class="price">KSh 800 / kg</span>
             <div class="qty-control">
-              <button onclick="changeQty('qty-king', -1)">-</button>
-              <input type="number" id="qty-king" value="1" min="1">
-              <button onclick="changeQty('qty-king', 1)">+</button>
+              <button onclick="changeQty('qty-tilapia', -1)">-</button>
+              <input type="number" id="qty-tilapia" value="1" min="1">
+              <button onclick="changeQty('qty-tilapia', 1)">+</button>
             </div>
-            <button class="add-btn" onclick="addToCart('Kingfish', 2200, 'qty-king')">Add to Cart</button>
+            <button class="add-btn" onclick="addToCart('Tilapia', 800, 'qty-tilapia')">Add to Cart</button>
           </div>
         </div>
 
         <div class="fish-card" data-category="crustacean">
-          <img src="images/shrimps.jpg.jpeg" class="fish-img">
+          <img src="images/prawns.jpg.jpeg" alt="Prawns" class="fish-img" loading="lazy">
           <div class="card-info">
-            <h3>Jumbo Shrimps</h3>
-            <span class="price">KSh 1800 / kg</span>
+            <h3>Prawns</h3>
+            <span class="price">KSh 1,200 / kg</span>
             <div class="qty-control">
-              <button onclick="changeQty('qty-shrimp', -1)">-</button>
-              <input type="number" id="qty-shrimp" value="1" min="1">
-              <button onclick="changeQty('qty-shrimp', 1)">+</button>
+              <button onclick="changeQty('qty-prawns', -1)">-</button>
+              <input type="number" id="qty-prawns" value="1" min="1">
+              <button onclick="changeQty('qty-prawns', 1)">+</button>
             </div>
-            <button class="add-btn" onclick="addToCart('Jumbo Shrimps', 1800, 'qty-shrimp')">Add to Cart</button>
+            <button class="add-btn" onclick="addToCart('Prawns', 1200, 'qty-prawns')">Add to Cart</button>
+          </div>
+        </div>
+
+        <div class="fish-card" data-category="fillet">
+          <img src="images/salmon.jpg.jpeg" alt="Salmon Fillet" class="fish-img" loading="lazy">
+          <div class="card-info">
+            <h3>Salmon Fillet</h3>
+            <span class="price">KSh 2,000 / kg</span>
+            <div class="qty-control">
+              <button onclick="changeQty('qty-salmon', -1)">-</button>
+              <input type="number" id="qty-salmon" value="1" min="1">
+              <button onclick="changeQty('qty-salmon', 1)">+</button>
+            </div>
+            <button class="add-btn" onclick="addToCart('Salmon Fillet', 2000, 'qty-salmon')">Add to Cart</button>
+          </div>
+        </div>
+
+        <div class="fish-card" data-category="crustacean">
+          <img src="images/crab.jpg.jpeg" alt="Crab" class="fish-img" loading="lazy">
+          <div class="card-info">
+            <h3>Crab</h3>
+            <span class="price">KSh 1,800 / kg</span>
+            <div class="qty-control">
+              <button onclick="changeQty('qty-crab', -1)">-</button>
+              <input type="number" id="qty-crab" value="1" min="1">
+              <button onclick="changeQty('qty-crab', 1)">+</button>
+            </div>
+            <button class="add-btn" onclick="addToCart('Crab', 1800, 'qty-crab')">Add to Cart</button>
           </div>
         </div>
       </div>
@@ -111,7 +139,7 @@
   <div id="paymentModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal('paymentModal')">&times;</span>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" width="120">
+      <img src="images/mpesa-logo.png" alt="M-Pesa Logo" width="120" style="margin-bottom:15px;">
       <h3>Secure Checkout</h3>
       <p id="pay-amount" style="font-weight:bold; font-size: 1.2rem;"></p>
       <form onsubmit="initiateMpesa(event)">
@@ -121,7 +149,7 @@
     </div>
   </div>
 
-  <!-- LOGIN / SIGNUP MODAL -->
+  <!-- LOGIN MODAL -->
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal('loginModal')">&times;</span>
@@ -129,7 +157,10 @@
       <form onsubmit="handleAuth(event)">
         <input type="text" id="userName" placeholder="Your Full Name" required>
         <input type="email" id="userEmail" placeholder="Email Address" required>
-        <input type="password" id="userPassword" placeholder="Password" required>
+        <div style="position:relative">
+          <input type="password" id="userPassword" placeholder="Password" required>
+          <span class="toggle-password" onclick="togglePassword()">👁️</span>
+        </div>
         <button type="submit" class="cta-button" style="width:100%">Enter Market</button>
       </form>
     </div>
@@ -144,6 +175,7 @@
     </div>
   </div>
 
+  <!-- FOOTER -->
   <footer>
     <p>&copy; 2026 Bahari Fresh Seafood | Contact: +254 796 401 465</p>
   </footer>
@@ -151,3 +183,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
