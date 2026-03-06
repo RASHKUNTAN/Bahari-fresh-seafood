@@ -1,55 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Bahari Admin | Dashboard</title>
+    <title>Admin Dashboard | Bahari Fresh</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body style="padding: 40px; background: #f1f5f9;">
-    <div style="max-width: 900px; margin: 0 auto;">
+    <div style="max-width: 1000px; margin: 0 auto;">
         <a href="index.html" style="text-decoration:none; color:#0b3d3b; font-weight:bold;">← Back to Store</a>
-        <h1 style="margin: 20px 0; color: #0b3d3b;">Inventory Control Center</h1>
+        <h1 style="margin: 20px 0;">Inventory & Order Control Center</h1>
         
-        <div style="background:white; padding:30px; border-radius:15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 40px;">
-            <h3 style="margin-bottom: 15px;">Add New Live Product</h3>
+        <div style="background:white; padding:30px; border-radius:15px; margin-bottom:30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <h3>Add New Seafood Item</h3>
             <form onsubmit="adminAdd(event)">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <input type="text" id="newName" placeholder="Product Name (e.g. Kingfish)" required>
+                    <input type="text" id="newName" placeholder="Product Name" required>
                     <input type="number" id="newPrice" placeholder="Price (KSh)" required>
                 </div>
-                <select id="newCat" style="width:100%; padding:12px; margin:15px 0; border-radius:10px; border:1.5px solid #e2e8f0;">
+                <select id="newCat">
                     <option value="whole">Whole Fish</option>
                     <option value="fillet">Fillet</option>
                     <option value="crustacean">Crustacean</option>
                 </select>
                 <input type="text" id="newImg" placeholder="Image URL (e.g. images/lobster.jpg)" required>
-                <button type="submit" class="checkout-btn">Post to Live Store</button>
+                <button type="submit" class="checkout-btn">Add to Live Store</button>
             </form>
         </div>
 
-        <table width="100%" style="background:white; border-collapse:collapse; border-radius:15px; overflow:hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-            <thead style="background:#0b3d3b; color:white;">
-                <tr><th style="padding:15px;">Image</th><th>Name</th><th>Price</th><th>Action</th></tr>
-            </thead>
-            <tbody id="adminList" style="text-align:center;"></tbody>
-        </table>
+        <div style="background:white; padding:30px; border-radius:15px; margin-bottom:30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #34b233;">
+            <h3 style="color: #0b3d3b;">Incoming Customer Orders</h3>
+            <table width="100%" style="margin-top:15px; border-collapse: collapse;">
+                <thead style="background:#f8fafc; text-align: left;">
+                    <tr>
+                        <th style="padding:10px;">Phone</th>
+                        <th>Items Bought</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="orderList"></tbody>
+            </table>
+        </div>
+
+        <div style="background:white; padding:30px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <h3>Current Inventory</h3>
+            <table width="100%" style="margin-top:15px; border-collapse: collapse;">
+                <thead style="background:#0b3d3b; color:white; text-align: left;">
+                    <tr><th style="padding:15px;">Image</th><th>Name</th><th>Price</th><th>Action</th></tr>
+                </thead>
+                <tbody id="adminList"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://qhpzqtwzifgthwovkpwp.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHpxdHd6aWZndGh3b3ZrcHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjkzMzMsImV4cCI6MjA4ODQwNTMzM30.rgo0X-UWShZAAyvi9hRqSka44ZIJ-2GlvTNsxkFBKgU';
-        const _supabase = supabase.createClient('https://qhpzqtwzifgthwovkpwp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHpxdHd6aWZndGh3b3ZrcHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjkzMzMsImV4cCI6MjA4ODQwNTMzM30.rgo0X-UWShZAAyvi9hRqSka44ZIJ-2GlvTNsxkFBKgU');
+        const SUPABASE_KEY = 'qhpzqtwzifgthwovkpwp';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // FETCH PRODUCTS
         async function fetchAdminList() {
-            const { data, error } = await _supabase.from('products').select('*');
+            const { data } = await _supabase.from('products').select('*');
             if (data) {
-                const list = document.getElementById('adminList');
-                list.innerHTML = data.map(p => `
-                    <tr style="border-bottom:1px solid #f1f5f9;">
+                document.getElementById('adminList').innerHTML = data.map(p => `
+                    <tr style="border-bottom:1px solid #eee;">
                         <td style="padding:10px;"><img src="${p.image_url}" width="60" style="border-radius:5px;"></td>
                         <td>${p.name}</td>
                         <td style="font-weight:bold; color:#00a896;">KSh ${p.price}</td>
-                        <td><button onclick="remove(${p.id})" style="color:#ff7675; border:none; background:none; cursor:pointer; font-weight:bold;">Delete</button></td>
+                        <td><button onclick="remove(${p.id})" style="color:red; border:none; background:none; cursor:pointer;">Delete</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // FETCH ORDERS
+        async function fetchOrders() {
+            const { data } = await _supabase.from('orders').select('*').order('created_at', { ascending: false });
+            if (data) {
+                document.getElementById('orderList').innerHTML = data.map(o => `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:10px; font-weight:bold;">${o.customer_phone}</td>
+                        <td>${o.items}</td>
+                        <td>KSh ${o.total_price}</td>
+                        <td><span style="background:#fff3cd; padding:4px 8px; border-radius:5px; font-size:12px;">${o.status}</span></td>
+                        <td><button onclick="deleteOrder(${o.id})" style="color:#999; border:none; background:none; cursor:pointer;">Archive</button></td>
                     </tr>
                 `).join('');
             }
@@ -63,17 +98,26 @@
                 category: document.getElementById('newCat').value,
                 image_url: document.getElementById('newImg').value
             };
-            const { error } = await _supabase.from('products').insert([p]);
-            if (error) alert(error.message); else location.reload();
+            await _supabase.from('products').insert([p]);
+            location.reload();
         }
 
         async function remove(id) {
-            if(confirm("Delete this product?")) {
+            if(confirm("Delete this item?")) {
                 await _supabase.from('products').delete().eq('id', id);
                 location.reload();
             }
         }
+
+        async function deleteOrder(id) {
+            if(confirm("Archive this order?")) {
+                await _supabase.from('orders').delete().eq('id', id);
+                location.reload();
+            }
+        }
+
         fetchAdminList();
+        fetchOrders();
     </script>
 </body>
 </html>
