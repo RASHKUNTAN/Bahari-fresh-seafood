@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const User = require('./models/User'); // adjust path if needed
+const User = require('./models/User');
 
 dotenv.config();
 
@@ -18,7 +18,7 @@ async function seedAdmin() {
       name: 'Bahari Admin',
       username: 'admin',
       email: 'admin@bahari.com',
-      password: 'AdminPass123', // change to a secure password
+      password: 'AdminPass123', // will be hashed automatically
       role: 'admin'
     });
 

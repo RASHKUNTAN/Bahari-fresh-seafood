@@ -1,226 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Bahari Fresh | Seller Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+    <title>Bahari Admin | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-  <h1>Seller Dashboard</h1>
+<body style="padding: 40px; background: #f1f5f9;">
+    <div style="max-width: 900px; margin: 0 auto;">
+        <a href="index.html" style="text-decoration:none; color:#0b3d3b; font-weight:bold;">← Back to Store</a>
+        <h1 style="margin: 20px 0; color: #0b3d3b;">Inventory Control Center</h1>
+        
+        <div style="background:white; padding:30px; border-radius:15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 40px;">
+            <h3 style="margin-bottom: 15px;">Add New Live Product</h3>
+            <form onsubmit="adminAdd(event)">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <input type="text" id="newName" placeholder="Product Name (e.g. Kingfish)" required>
+                    <input type="number" id="newPrice" placeholder="Price (KSh)" required>
+                </div>
+                <select id="newCat" style="width:100%; padding:12px; margin:15px 0; border-radius:10px; border:1.5px solid #e2e8f0;">
+                    <option value="whole">Whole Fish</option>
+                    <option value="fillet">Fillet</option>
+                    <option value="crustacean">Crustacean</option>
+                </select>
+                <input type="text" id="newImg" placeholder="Image URL (e.g. images/lobster.jpg)" required>
+                <button type="submit" class="checkout-btn">Post to Live Store</button>
+            </form>
+        </div>
 
-  <!-- Logout Button -->
-  <button id="logoutBtn" style="background:red; color:white; padding:8px 12px; margin-bottom:20px;">
-    Logout
-  </button>
-
-  <!-- Add Product Form -->
-  <form id="addProductForm">
-    <input type="text" id="productName" placeholder="Product Name" required>
-    <input type="number" id="productPrice" placeholder="Price (KSh)" required>
-    <input type="text" id="productImage" placeholder="Image URL" required>
-    <select id="productCategory" required>
-      <option value="">Select Category</option>
-      <option value="whole">Whole Fish</option>
-      <option value="fillet">Fillet</option>
-      <option value="crustacean">Crustacean</option>
-    </select>
-    <textarea id="productDescription" placeholder="Description"></textarea>
-    <input type="number" id="productStock" placeholder="Stock Quantity" required>
-    <button type="submit">Add Product</button>
-  </form>
-
-  <h2>Existing Products</h2>
-  <div id="productList"></div>
-
-  <!-- Orders Section -->
-  <h2>Customer Orders</h2>
-  <div id="orderList"></div>
-
-  <!-- Edit Product Modal -->
-  <div id="editModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span class="close" onclick="closeEditModal()">&times;</span>
-      <h2>Edit Product</h2>
-      <form id="editProductForm">
-        <input type="hidden" id="editProductId">
-        <input type="text" id="editProductName" placeholder="Product Name" required>
-        <input type="number" id="editProductPrice" placeholder="Price (KSh)" required>
-        <input type="text" id="editProductImage" placeholder="Image URL" required>
-        <select id="editProductCategory" required>
-          <option value="whole">Whole Fish</option>
-          <option value="fillet">Fillet</option>
-          <option value="crustacean">Crustacean</option>
-        </select>
-        <textarea id="editProductDescription" placeholder="Description"></textarea>
-        <input type="number" id="editProductStock" placeholder="Stock Quantity" required>
-        <button type="submit">Update Product</button>
-      </form>
+        <table width="100%" style="background:white; border-collapse:collapse; border-radius:15px; overflow:hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+            <thead style="background:#0b3d3b; color:white;">
+                <tr><th style="padding:15px;">Image</th><th>Name</th><th>Price</th><th>Action</th></tr>
+            </thead>
+            <tbody id="adminList" style="text-align:center;"></tbody>
+        </table>
     </div>
-  </div>
 
-  <script>
-    // Restrict access to admins
-    const role = localStorage.getItem('userRole');
-    if (role !== 'admin') {
-      alert('Access denied: Admins only');
-      window.location.href = 'index.html';
-    }
+    <script>
+        const SUPABASE_URL = 'https://qhpzqtwzifgthwovkpwp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHpxdHd6aWZndGh3b3ZrcHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjkzMzMsImV4cCI6MjA4ODQwNTMzM30.rgo0X-UWShZAAyvi9hRqSka44ZIJ-2GlvTNsxkFBKgU';
+        const _supabase = supabase.createClient('https://qhpzqtwzifgthwovkpwp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHpxdHd6aWZndGh3b3ZrcHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjkzMzMsImV4cCI6MjA4ODQwNTMzM30.rgo0X-UWShZAAyvi9hRqSka44ZIJ-2GlvTNsxkFBKgU');
 
-    const token = localStorage.getItem('authToken');
+        async function fetchAdminList() {
+            const { data, error } = await _supabase.from('products').select('*');
+            if (data) {
+                const list = document.getElementById('adminList');
+                list.innerHTML = data.map(p => `
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:10px;"><img src="${p.image_url}" width="60" style="border-radius:5px;"></td>
+                        <td>${p.name}</td>
+                        <td style="font-weight:bold; color:#00a896;">KSh ${p.price}</td>
+                        <td><button onclick="remove(${p.id})" style="color:#ff7675; border:none; background:none; cursor:pointer; font-weight:bold;">Delete</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
 
-    // Logout functionality
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userRole');
-      await fetch('/api/auth/logout', { method: 'POST' });
-      alert('Logged out successfully!');
-      window.location.href = 'index.html';
-    });
+        async function adminAdd(e) {
+            e.preventDefault();
+            const p = {
+                name: document.getElementById('newName').value,
+                price: parseInt(document.getElementById('newPrice').value),
+                category: document.getElementById('newCat').value,
+                image_url: document.getElementById('newImg').value
+            };
+            const { error } = await _supabase.from('products').insert([p]);
+            if (error) alert(error.message); else location.reload();
+        }
 
-    // Add product
-    document.getElementById('addProductForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const product = {
-        name: document.getElementById('productName').value,
-        price: document.getElementById('productPrice').value,
-        image: document.getElementById('productImage').value,
-        category: document.getElementById('productCategory').value,
-        description: document.getElementById('productDescription').value,
-        stock: document.getElementById('productStock').value
-      };
-
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(product)
-      });
-
-      const data = await res.json();
-      alert('Product added successfully!');
-      loadProducts();
-    });
-
-    // Load products
-    async function loadProducts() {
-      const res = await fetch('/api/products');
-      const products = await res.json();
-      const list = document.getElementById('productList');
-      list.innerHTML = products.map(p => `
-        <div>
-          <h3>${p.name}</h3>
-          <p>KSh ${p.price}</p>
-          <img src="${p.image}" width="100">
-          <button onclick="openEditModal('${p._id}', '${p.name}', ${p.price}, '${p.image}', '${p.category}', '${p.description}', ${p.stock})">Edit</button>
-          <button onclick="deleteProduct('${p._id}')">Delete</button>
-        </div>
-      `).join('');
-    }
-
-    // Delete product
-    async function deleteProduct(id) {
-      const res = await fetch('/api/products/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      alert(data.message);
-      loadProducts();
-    }
-
-    // Open edit modal
-    function openEditModal(id, name, price, image, category, description, stock) {
-      document.getElementById('editProductId').value = id;
-      document.getElementById('editProductName').value = name;
-      document.getElementById('editProductPrice').value = price;
-      document.getElementById('editProductImage').value = image;
-      document.getElementById('editProductCategory').value = category;
-      document.getElementById('editProductDescription').value = description;
-      document.getElementById('editProductStock').value = stock;
-      document.getElementById('editModal').style.display = 'block';
-    }
-
-    // Close edit modal
-    function closeEditModal() {
-      document.getElementById('editModal').style.display = 'none';
-    }
-
-    // Update product
-    document.getElementById('editProductForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const id = document.getElementById('editProductId').value;
-      const product = {
-        name: document.getElementById('editProductName').value,
-        price: document.getElementById('editProductPrice').value,
-        image: document.getElementById('editProductImage').value,
-        category: document.getElementById('editProductCategory').value,
-        description: document.getElementById('editProductDescription').value,
-        stock: document.getElementById('editProductStock').value
-      };
-
-      const res = await fetch('/api/products/' + id, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(product)
-      });
-
-      const data = await res.json();
-      alert('Product updated successfully!');
-      closeEditModal();
-      loadProducts();
-    });
-
-    // Load orders
-    async function loadOrders() {
-      const res = await fetch('/api/orders', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const orders = await res.json();
-      const list = document.getElementById('orderList');
-      list.innerHTML = orders.map(o => `
-        <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-          <h3>Order #${o._id}</h3>
-          <p><strong>User:</strong> ${o.userId?.name || 'N/A'} (${o.userId?.email || ''})</p>
-          <p><strong>Total:</strong> KSh ${o.total}</p>
-          <p><strong>Status:</strong> ${o.status}</p>
-          <p><strong>Products:</strong></p>
-          <ul>
-            ${o.products.map(p => `<li>${p.productId?.name} x ${p.quantity}</li>`).join('')}
-          </ul>
-          <select onchange="updateOrderStatus('${o._id}', this.value)">
-            <option value="">Update Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Shipped">Shipped</option>
-            <option value="Delivered">Delivered</option>
-          </select>
-        </div>
-      `).join('');
-    }
-
-    // Update order status
-    async function updateOrderStatus(id, status) {
-      const res = await fetch('/api/orders/' + id + '/status', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status })
-      });
-      const data = await res.json();
-      alert('Order status updated!');
-      loadOrders();
-    }
-
-    // Initial load
-    loadProducts();
-    loadOrders();
-  </script>
+        async function remove(id) {
+            if(confirm("Delete this product?")) {
+                await _supabase.from('products').delete().eq('id', id);
+                location.reload();
+            }
+        }
+        fetchAdminList();
+    </script>
 </body>
 </html>
-

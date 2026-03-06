@@ -1,239 +1,130 @@
-// Shared state
+// --- DATABASE CONFIGURATION ---
+const SUPABASE_URL = 'https://qhpzqtwzifgthwovkpwp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHpxdHd6aWZndGh3b3ZrcHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjkzMzMsImV4cCI6MjA4ODQwNTMzM30.rgo0X-UWShZAAyvi9hRqSka44ZIJ-2GlvTNsxkFBKgU';
+const _supabase = supabase.createClient('https://qhpzqtwzifgthwovkpwp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHpxdHd6aWZndGh3b3ZrcHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjkzMzMsImV4cCI6MjA4ODQwNTMzM30.rgo0X-UWShZAAyvi9hRqSka44ZIJ-2GlvTNsxkFBKgU');
+
 let cart = JSON.parse(localStorage.getItem('bahari_cart')) || [];
-let user = JSON.parse(localStorage.getItem('bahari_user')) || null;
-let orderHistory = JSON.parse(localStorage.getItem('bahari_orders')) || [];
-const MERCHANT_PHONE = "254796401465";
+let allProducts = [];
+let isLoginMode = false;
 
-// Currency formatting
-function formatCurrency(amount) {
-  return `KSh ${amount.toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
+// 1. LOAD LIVE PRODUCTS FROM CLOUD
+async function loadProducts() {
+    const { data, error } = await _supabase.from('products').select('*');
+    if (error) {
+        console.error('Error:', error);
+        // Fallback to your original images if database is empty
+        renderProducts([
+            { id: 1, name: 'Red Snapper', price: 1500, category: 'whole', image_url: 'images/redsnapper.jpg' },
+            { id: 2, name: 'Silver Pomfret', price: 800, category: 'whole', image_url: 'images/silver-pomfret.jpg' }
+        ]);
+    } else {
+        allProducts = data;
+        renderProducts(data);
+    }
 }
 
-// Detect current page
-document.addEventListener('DOMContentLoaded', () => {
-  checkUser();
-  updateCartUI();
-  if (location.hash === "#history") openModal("historyModal");
-  if (location.hash === "#cart") toggleCart();
-});
-
-// -------------------- CART LOGIC --------------------
-function changeQty(id, delta) {
-  const input = document.getElementById(id);
-  let val = parseInt(input.value) + delta;
-  if (val < 1) val = 1;
-  input.value = val;
+function renderProducts(items) {
+    const grid = document.getElementById('productGrid');
+    grid.innerHTML = items.map(p => `
+        <div class="fish-card" data-category="${p.category}">
+            <img src="${p.image_url}" alt="${p.name}" class="fish-img" onerror="this.src='https://via.placeholder.com/300x200?text=Fresh+Fish'">
+            <div class="card-info">
+                <h3>${p.name}</h3>
+                <span class="price">KSh ${p.price.toLocaleString()}</span>
+                <button class="add-btn" onclick="addToCart(${p.id})">Add to Basket</button>
+            </div>
+        </div>
+    `).join('');
 }
 
-function addToCart(name, price, qtyId) {
-  const qty = parseInt(document.getElementById(qtyId).value);
-  const itemTotal = price * qty;
-  cart.push({ name, price, qty, itemTotal, id: Date.now() });
-  localStorage.setItem('bahari_cart', JSON.stringify(cart));
-  alert(`${name} added to cart!`);
-  updateCartUI();
-}
-
-function removeItem(id) {
-  cart = cart.filter(i => i.id !== id);
-  localStorage.setItem('bahari_cart', JSON.stringify(cart));
-  updateCartUI();
-}
-
-function clearCart() {
-  cart = [];
-  localStorage.setItem('bahari_cart', "[]");
-  updateCartUI();
+// 2. LIVE CART LOGIC
+function addToCart(id) {
+    const p = allProducts.find(x => x.id === id);
+    if (!p) return;
+    cart.push(p);
+    localStorage.setItem('bahari_cart', JSON.stringify(cart));
+    updateCartUI();
+    if (!document.getElementById('cartSidebar').classList.contains('active')) toggleCart();
 }
 
 function updateCartUI() {
-  const list = document.getElementById('cart-items-list');
-  const totalDisplay = document.getElementById('cart-total-price');
-  const cartCount = document.getElementById('cart-count');
-  if (!list || !totalDisplay) return;
-
-  list.innerHTML = cart.length === 0 ? "<p>Your basket is empty.</p>" : "";
-  let grandTotal = 0;
-
-  cart.forEach(item => {
-    grandTotal += item.itemTotal;
-    list.innerHTML += `
-      <div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center">
-        <div>
-          <strong>${item.name}</strong><br>
-          <small>${item.qty}kg x ${formatCurrency(item.price)}</small>
+    const list = document.getElementById('cart-items-list');
+    list.innerHTML = cart.map((item, index) => `
+        <div style="display:flex; justify-content:space-between; padding: 15px 0; border-bottom: 1px solid #f1f5f9; align-items:center;">
+            <div>
+                <strong style="display:block;">${item.name}</strong>
+                <small style="color:#00a896;">KSh ${item.price.toLocaleString()}</small>
+            </div>
+            <button onclick="removeFromCart(${index})" style="color:#ff7675; border:none; background:none; cursor:pointer; font-size:18px;">✕</button>
         </div>
-        <div style="font-weight:bold">
-          ${formatCurrency(item.itemTotal)}
-          <span onclick="removeItem(${item.id})" style="color:red; margin-left:10px; cursor:pointer">✕</span>
-        </div>
-      </div>`;
-  });
-  totalDisplay.innerText = formatCurrency(grandTotal);
-  if (cartCount) {
-    const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-    cartCount.innerText = totalQty;
-  }
+    `).join('');
+    
+    const total = cart.reduce((sum, i) => sum + i.price, 0);
+    document.getElementById('cart-total-price').innerText = `KSh ${total.toLocaleString()}`;
+    document.getElementById('cart-count').innerText = cart.length;
 }
 
-function toggleCart() {
-  const cartSidebar = document.getElementById('cartSidebar');
-  if (cartSidebar) {
-    cartSidebar.classList.toggle('active');
-  }
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    localStorage.setItem('bahari_cart', JSON.stringify(cart));
+    updateCartUI();
 }
 
-// -------------------- USER AUTH --------------------
-function checkUser() {
-  const authSection = document.getElementById('auth-section');
-  if (!authSection) return;
-  if (user) {
-    authSection.innerHTML = `Hi, ${user.name} | <a href="#" onclick="logout()">Logout</a>`;
-    const historyLink = document.getElementById('history-link');
-    if (historyLink) historyLink.style.display = "inline";
-  }
-}
+// 3. AUTHENTICATION (SUPABASE)
+async function handleAuth(e) {
+    e.preventDefault();
+    const email = document.getElementById('userEmail').value;
+    const password = document.getElementById('userPass').value;
 
-function handleAuth(e) {
-  e.preventDefault();
-  const name = document.getElementById('userName').value;
-  const email = document.getElementById('userEmail').value;
-  const password = document.getElementById('userPassword').value;
-
-  if (password.length < 6) {
-    alert("Password must be at least 6 characters.");
-    return;
-  }
-
-  user = { name, email, password };
-  localStorage.setItem('bahari_user', JSON.stringify(user));
-  alert("Login successful!");
-  window.location.href = "index.html";
-}
-
-function logout() {
-  localStorage.removeItem('bahari_user');
-  window.location.href = "index.html";
-}
-
-function togglePassword() {
-  const passwordInput = document.getElementById('userPassword');
-  const toggleIcon = document.querySelector('.toggle-password');
-  if (!passwordInput || !toggleIcon) return;
-  if (passwordInput.type === "password") {
-    passwordInput.type = "text";
-    toggleIcon.textContent = "🙈";
-  } else {
-    passwordInput.type = "password";
-    toggleIcon.textContent = "👁️";
-  }
-}
-
-// -------------------- MODALS --------------------
-function openModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = "block";
-    if (modalId === "historyModal") {
-      renderHistory();
+    if (isLoginMode) {
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message); else location.reload();
+    } else {
+        const { data, error } = await _supabase.auth.signUp({ email, password });
+        if (error) alert(error.message); else alert("Account created! Check email for verification.");
     }
-  }
 }
 
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = "none";
-  }
+function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    document.getElementById('authTitle').innerText = isLoginMode ? 'Login' : 'Create Account';
+    document.getElementById('authSwitch').innerText = isLoginMode ? 'Need an account? Register' : 'Already have an account? Login';
 }
 
-function openPayment() {
-  openModal('paymentModal');
+// 4. M-PESA CHECKOUT
+function processMpesa() {
+    const phone = document.getElementById('mpesa-phone').value;
+    const total = cart.reduce((sum, i) => sum + i.price, 0);
+    if(!phone.startsWith('254')) return alert("Use format 2547XXXXXXXX");
+    
+    alert(`STK Push sent to ${phone} for KSh ${total}. Check your phone!`);
+    cart = [];
+    localStorage.setItem('bahari_cart', "[]");
+    location.reload();
 }
 
-// Close modal if user clicks outside
-window.addEventListener('click', function(event) {
-  const modals = document.querySelectorAll('.modal');
-  modals.forEach(modal => {
-    if (event.target === modal) {
-      modal.style.display = "none";
-    }
-  });
-});
-
-// Close modal with ESC key
-window.addEventListener('keydown', function(event) {
-  if (event.key === "Escape") {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => { modal.style.display = "none"; });
-    const cartSidebar = document.getElementById('cartSidebar');
-    if (cartSidebar) cartSidebar.classList.remove('active');
-  }
-});
-
-// -------------------- PAYMENT --------------------
-function showPaymentTotal() {
-  const payAmount = document.getElementById('pay-amount');
-  if (!payAmount) return;
-  let grandTotal = cart.reduce((sum, item) => sum + item.itemTotal, 0);
-  payAmount.innerText = `Total to Pay: ${formatCurrency(grandTotal)}`;
-}
-
-function initiateMpesa(e) {
-  e.preventDefault();
-  if (!user) {
-    alert("Please login first.");
-    window.location.href = "login.html";
-    return;
-  }
-  if (cart.length === 0) {
-    alert("Cart is empty!");
-    window.location.href = "index.html";
-    return;
-  }
-
-  const phone = document.getElementById('mpesa-phone').value;
-  let total = cart.reduce((sum, item) => sum + item.itemTotal, 0);
-
-  const order = { date: new Date().toLocaleString(), items: [...cart], total: formatCurrency(total) };
-  orderHistory.unshift(order);
-  localStorage.setItem('bahari_orders', JSON.stringify(orderHistory));
-
-  let msg = `*PAID ORDER - BAHARI FRESH*%0A------------------%0A`;
-  msg += `Customer: ${user.name}%0A`;
-  cart.forEach(i => msg += `• ${i.name} (${i.qty}kg) - ${formatCurrency(i.itemTotal)}%0A`);
-  msg += `%0A*TOTAL: ${formatCurrency(total)}*%0A*PAID VIA M-PESA: ${phone}*`;
-
-  cart = [];
-  localStorage.setItem('bahari_cart', "[]");
-
-  alert("Payment initiated! Redirecting to WhatsApp...");
-  window.location.href = `https://wa.me/${MERCHANT_PHONE}?text=${msg}`;
-}
-
-// -------------------- HISTORY --------------------
-function renderHistory() {
-  const list = document.getElementById('order-history-list');
-  if (!list) return;
-  list.innerHTML = orderHistory.length ? "" : "No previous orders.";
-  orderHistory.forEach(o => {
-    let itemsHtml = o.items.map(i => `• ${i.name} (${i.qty}kg) - ${formatCurrency(i.itemTotal)}`).join("<br>");
-    list.innerHTML += `<div style="background:rgba(255,255,255,0.1); padding:15px; margin-bottom:10px; border-radius:12px; color:#fff">
-      <small>${o.date}</small><br>
-      <strong>${o.total}</strong><br>
-      ${itemsHtml}
-    </div>`;
-  });
-}
-
-// -------------------- SEARCH --------------------
+// 5. SEARCH & UI
 function filterProducts() {
-  const query = document.getElementById("searchInput").value.toLowerCase();
-  const products = document.querySelectorAll(".fish-card");
-  products.forEach(card => {
-    const name = card.querySelector("h3").textContent.toLowerCase();
-    card.style.display = name.includes(query) ? "block" : "none";
-  });
+    const val = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = allProducts.filter(p => p.name.toLowerCase().includes(val));
+    renderProducts(filtered);
 }
 
- 
+function filterCategory(cat, el) {
+    document.querySelectorAll('.cat-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    const filtered = cat === 'all' ? allProducts : allProducts.filter(p => p.category === cat);
+    renderProducts(filtered);
+}
+
+function toggleCart() { document.getElementById('cartSidebar').classList.toggle('active'); }
+function openModal(id) { 
+    document.getElementById(id).style.display = 'flex'; 
+    if(id === 'paymentModal') {
+        const total = cart.reduce((sum, i) => sum + i.price, 0);
+        document.getElementById('pay-total-display').innerText = `Amount: KSh ${total.toLocaleString()}`;
+    }
+}
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+document.addEventListener('DOMContentLoaded', loadProducts);
