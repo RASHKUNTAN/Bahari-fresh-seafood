@@ -1,56 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Admin Dashboard | Bahari Fresh</title>
+    <meta charset="UTF-8">
+    <title>Bahari Admin | Control Center</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .admin-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; padding: 20px 5%; }
+        .panel { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .status-pending_payment { background: #fff4e6; color: #d35400; }
+        .status-delivered { background: #e8f5e9; color: #2e7d32; }
+        .edit-price { color: var(--primary); font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+    </style>
 </head>
-<body style="padding: 40px; background: #f1f5f9;">
-    <div style="max-width: 1000px; margin: 0 auto;">
-        <a href="index.html" style="text-decoration:none; color:#0b3d3b; font-weight:bold;">← Back to Store</a>
-        <h1 style="margin: 20px 0;">Inventory & Order Control Center</h1>
-        
-        <div style="background:white; padding:30px; border-radius:15px; margin-bottom:30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <h3>Add New Seafood Item</h3>
-            <form onsubmit="adminAdd(event)">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <input type="text" id="newName" placeholder="Product Name" required>
-                    <input type="number" id="newPrice" placeholder="Price (KSh)" required>
-                </div>
-                <select id="newCat">
-                    <option value="whole">Whole Fish</option>
-                    <option value="fillet">Fillet</option>
-                    <option value="crustacean">Crustacean</option>
-                </select>
-                <input type="text" id="newImg" placeholder="Image URL (e.g. images/lobster.jpg)" required>
-                <button type="submit" class="checkout-btn">Add to Live Store</button>
-            </form>
+<body id="adminBody" style="display:none; background: #f4f7f6;">
+    <audio id="orderAlarm" src="alert.mp3" preload="auto"></audio>
+    <nav class="navbar">
+        <div style="font-weight:800;">⚓ BAHARI ADMIN PANEL</div>
+        <button onclick="_supabase.auth.signOut().then(()=>location.reload())" style="background:white; color:var(--primary); border:none; padding:5px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">Logout</button>
+    </nav>
+
+    <div class="admin-grid">
+        <div class="left-col">
+            <div class="panel" style="margin-bottom:25px; border: 2px dashed var(--primary);">
+                <h3>✨ Add New Product</h3>
+                <form onsubmit="handleProductUpload(event)">
+                    <input type="text" id="pName" placeholder="Product Name" required style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                    <input type="number" id="pPrice" placeholder="Price (KSh)" required style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                    <select id="pCategory" style="width:100%; margin-bottom:10px; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                        <option value="Fresh Water">Fresh Water</option>
+                        <option value="Sea Food">Sea Food</option>
+                    </select>
+                    <input type="file" id="pImage" accept="image/*" required style="margin-bottom:15px; display:block;">
+                    <button type="submit" id="uploadBtn" style="width:100%; background:var(--primary); color:white; padding:12px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">SAVE TO SITE</button>
+                </form>
+            </div>
+            <div class="panel">
+                <h3>🐟 Inventory (Click Price to Edit)</h3>
+                <div id="inventoryList"></div>
+            </div>
         </div>
 
-        <div style="background:white; padding:30px; border-radius:15px; margin-bottom:30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #34b233;">
-            <h3 style="color: #0b3d3b;">Incoming Customer Orders</h3>
-            <table width="100%" style="margin-top:15px; border-collapse: collapse;">
-                <thead style="background:#f8fafc; text-align: left;">
-                    <tr>
-                        <th style="padding:10px;">Phone</th>
-                        <th>Items Bought</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="orderList"></tbody>
-            </table>
-        </div>
-
-        <div style="background:white; padding:30px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <h3>Current Inventory</h3>
-            <table width="100%" style="margin-top:15px; border-collapse: collapse;">
-                <thead style="background:#0b3d3b; color:white; text-align: left;">
-                    <tr><th style="padding:15px;">Image</th><th>Name</th><th>Price</th><th>Action</th></tr>
-                </thead>
-                <tbody id="adminList"></tbody>
-            </table>
+        <div class="right-col">
+            <div class="panel">
+                <h2>Incoming M-Pesa Orders</h2>
+                <div id="orderList"></div>
+            </div>
         </div>
     </div>
 
@@ -58,66 +54,77 @@
         const SUPABASE_URL = 'https://qhpzqtwzifgthwovkpwp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHpxdHd6aWZndGh3b3ZrcHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjkzMzMsImV4cCI6MjA4ODQwNTMzM30.rgo0X-UWShZAAyvi9hRqSka44ZIJ-2GlvTNsxkFBKgU';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const ADMIN_EMAIL = 'rashidray082@gmail.com';
+        let lastOrderCount = 0;
 
-        // FETCH PRODUCTS
-        async function fetchAdminList() {
-            const { data } = await _supabase.from('products').select('*');
-            if (data) {
-                document.getElementById('adminList').innerHTML = data.map(p => `
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:10px;"><img src="${p.image_url}" width="60" style="border-radius:5px;"></td>
-                        <td>${p.name}</td>
-                        <td style="font-weight:bold; color:#00a896;">KSh ${p.price}</td>
-                        <td><button onclick="remove(${p.id})" style="color:red; border:none; background:none; cursor:pointer;">Delete</button></td>
-                    </tr>
-                `).join('');
+        async function checkAdmin() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user || user.email !== ADMIN_EMAIL) window.location.href = "index.html";
+            else { 
+                document.getElementById('adminBody').style.display = 'block'; 
+                loadInventory(); 
+                loadOrders(true); 
+                setInterval(loadOrders, 10000); 
             }
         }
 
-        // FETCH ORDERS
-        async function fetchOrders() {
-            const { data } = await _supabase.from('orders').select('*').order('created_at', { ascending: false });
-            if (data) {
-                document.getElementById('orderList').innerHTML = data.map(o => `
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:10px; font-weight:bold;">${o.customer_phone}</td>
-                        <td>${o.items}</td>
-                        <td>KSh ${o.total_price}</td>
-                        <td><span style="background:#fff3cd; padding:4px 8px; border-radius:5px; font-size:12px;">${o.status}</span></td>
-                        <td><button onclick="deleteOrder(${o.id})" style="color:#999; border:none; background:none; cursor:pointer;">Archive</button></td>
-                    </tr>
-                `).join('');
-            }
-        }
-
-        async function adminAdd(e) {
+        async function handleProductUpload(e) {
             e.preventDefault();
-            const p = {
-                name: document.getElementById('newName').value,
-                price: parseInt(document.getElementById('newPrice').value),
-                category: document.getElementById('newCat').value,
-                image_url: document.getElementById('newImg').value
-            };
-            await _supabase.from('products').insert([p]);
+            const btn = document.getElementById('uploadBtn');
+            const file = document.getElementById('pImage').files[0];
+            btn.disabled = true; btn.innerText = "Uploading...";
+            const fileName = `${Date.now()}-${file.name}`;
+            await _supabase.storage.from('fish-photos').upload(fileName, file);
+            const { data } = _supabase.storage.from('fish-photos').getPublicUrl(fileName);
+            await _supabase.from('products').insert([{
+                name: document.getElementById('pName').value,
+                price: parseInt(document.getElementById('pPrice').value),
+                category: document.getElementById('pCategory').value,
+                image_url: data.publicUrl
+            }]);
             location.reload();
         }
 
-        async function remove(id) {
-            if(confirm("Delete this item?")) {
-                await _supabase.from('products').delete().eq('id', id);
-                location.reload();
+        async function loadInventory() {
+            const { data } = await _supabase.from('products').select('*').order('name');
+            document.getElementById('inventoryList').innerHTML = data.map(p => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
+                    <div><strong>${p.name}</strong><br><span class="edit-price" onclick="updatePrice(${p.id}, '${p.name}', ${p.price})">KSh ${p.price.toLocaleString()} ✏️</span></div>
+                    <button onclick="deleteProduct(${p.id})" style="color:red; background:none; border:none; cursor:pointer;">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        async function updatePrice(id, name, oldPrice) {
+            const newPrice = prompt(`Update price for ${name}:`, oldPrice);
+            if (newPrice) {
+                await _supabase.from('products').update({ price: parseInt(newPrice) }).eq('id', id);
+                loadInventory();
             }
         }
 
-        async function deleteOrder(id) {
-            if(confirm("Archive this order?")) {
-                await _supabase.from('orders').delete().eq('id', id);
-                location.reload();
-            }
+        async function deleteProduct(id) { if(confirm("Delete this?")) { await _supabase.from('products').delete().eq('id', id); loadInventory(); } }
+
+        async function loadOrders(first = false) {
+            const { data } = await _supabase.from('orders').select('*').order('created_at', {ascending: false});
+            if (!first && data.length > lastOrderCount) document.getElementById('orderAlarm').play().catch(()=>{});
+            lastOrderCount = data.length;
+            document.getElementById('orderList').innerHTML = data.map(o => `
+                <div style="background:white; padding:15px; margin-bottom:15px; border-radius:15px; border:1px solid #eee;">
+                    <span class="status-badge status-${o.status}">${o.status.toUpperCase()}</span>
+                    <h3 style="margin:10px 0;">${o.customer_phone}</h3>
+                    <p style="font-size:13px;">${o.items}</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>KSh ${o.total_price.toLocaleString()}</strong>
+                        <button onclick="markDone(${o.id})" style="padding:5px 10px; cursor:pointer; background:var(--primary); color:white; border:none; border-radius:5px;">Mark Delivered</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        fetchAdminList();
-        fetchOrders();
+        async function markDone(id) { await _supabase.from('orders').update({status:'delivered'}).eq('id', id); loadOrders(true); }
+
+        checkAdmin();
     </script>
 </body>
 </html>
