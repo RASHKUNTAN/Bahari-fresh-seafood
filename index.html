@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bahari Fresh | Premium Seafood</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -10,7 +11,7 @@
     <nav class="navbar">
         <div style="font-size:1.5rem; font-weight:800;">⚓ BAHARI FRESH</div>
         <div style="display:flex; gap:20px; align-items: center;">
-            <a id="adminDashBtn" href="admin.html" style="display:none; background:var(--secondary); color:var(--primary); padding:5px 12px; border-radius:10px; font-weight:bold; text-decoration:none; font-size:12px;">DASHBOARD</a>
+            <a id="adminDashBtn" href="admin.html" style="display:none; background:white; color:var(--primary); padding:5px 12px; border-radius:10px; font-weight:bold; text-decoration:none; font-size:12px;">ADMIN</a>
             <span id="userNameDisplay" style="color:white; font-size:14px; font-weight:bold;"></span>
             <span id="authBtn" onclick="openModal('authModal')" style="cursor:pointer; font-weight:bold;">Login</span>
             <div onclick="toggleCart()" style="cursor:pointer; background:var(--secondary); color:var(--primary); padding:5px 15px; border-radius:10px; font-weight:800;">
@@ -20,38 +21,38 @@
     </nav>
 
     <div style="padding: 20px 5%; text-align: center;">
-        <input type="text" id="searchInput" class="search-bar" placeholder="Search for fresh fish..." onkeyup="filterProducts()" style="width:100%; max-width:500px; padding:15px; border-radius:30px; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search fresh catch..." onkeyup="filterProducts()" style="width:100%; max-width:500px; padding:15px; border-radius:30px; border:none; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
     </div>
 
-    <div id="productGrid"></div>
+    <div id="productGrid" style="padding: 20px 5%; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;"></div>
 
-    <div id="authModal" class="modal">
-        <div style="background:white; padding:40px; border-radius:25px; width:320px; text-align: center;">
-            <h2 id="authTitle" style="margin-top:0; color: var(--primary);">Login</h2>
+    <div id="authModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:white; padding:40px; border-radius:25px; width:320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <h2 id="authTitle" style="color:var(--primary); margin-top:0;">Login</h2>
             <form onsubmit="handleAuth(event)">
                 <input type="text" id="display_name" placeholder="Full Name" style="display:none; width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd;">
-                <input type="email" id="userEmail" placeholder="Email" required style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd;">
+                <input type="email" id="userEmail" placeholder="Email Address" required style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd;">
                 <input type="password" id="userPass" placeholder="Password" required style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ddd;">
-                <button type="submit" style="width:100%; background: var(--primary); color:white; padding:12px; border:none; border-radius:10px; font-weight:bold;">Continue</button>
+                <button type="submit" style="width:100%; background: var(--primary); color:white; padding:12px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Continue</button>
             </form>
-            <p id="authSwitch" onclick="toggleAuthMode()" style="cursor:pointer; font-size:12px; margin-top:15px; color: #666;">New here? Create an account</p>
-            <button onclick="closeModal('authModal')" style="width:100%; margin-top:10px; background:none; border:none; color:#999;">Close</button>
+            <p id="authSwitch" onclick="toggleAuthMode()" style="cursor:pointer; font-size:12px; margin-top:15px; color: #666;">New to Bahari? <b>Create Account</b></p>
+            <button onclick="closeModal('authModal')" style="background:none; border:none; color:#999; margin-top:15px; cursor:pointer;">Close</button>
         </div>
     </div>
 
     <aside id="cartSidebar" class="sidebar">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:20px;">
             <h2 style="margin:0;">Your Basket</h2>
             <span onclick="toggleCart()" style="cursor:pointer; font-size:1.5rem;">✕</span>
         </div>
-        <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-        <div id="cart-items-list" style="max-height: 50vh; overflow-y: auto;"></div>
-        <div style="margin-top:30px;">
-            <h3 id="cart-total-price" style="text-align:right;">Total: KSh 0</h3>
-            <div style="background:#f1f8f5; padding:20px; border-radius:15px; border: 1px solid var(--accent);">
-                <label style="font-size:12px; font-weight:800; color:var(--accent);">M-PESA NUMBER</label>
-                <input type="text" id="mpesa-phone" placeholder="2547XXXXXXXX" style="width:100%; padding:12px; margin:10px 0; border-radius:8px; border:1px solid #ddd;">
-                <button id="payBtn" onclick="processMpesa()" style="width:100%; background:var(--accent); color:white; padding:15px; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Confirm Order</button>
+        <hr style="border:0; border-top:1px solid #eee; margin:0;">
+        <div id="cart-items-list" style="padding:20px; flex-grow:1; overflow-y:auto;"></div>
+        <div style="padding:25px; background:#f9f9f9; border-top:1px solid #eee;">
+            <h3 id="cart-total-price" style="text-align:right; margin-bottom:20px;">Total: KSh 0</h3>
+            <div style="background:white; padding:15px; border-radius:12px; border:1px solid #ddd;">
+                <label style="font-size:11px; font-weight:bold; color:#666;">M-PESA NUMBER</label>
+                <input type="text" id="mpesa-phone" placeholder="2547XXXXXXXX" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; font-size:16px;">
+                <button id="payBtn" onclick="processMpesa()" style="width:100%; background:#2e7d32; color:white; padding:15px; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-size:14px;">CONFIRM & PAY</button>
             </div>
         </div>
     </aside>
@@ -60,10 +61,11 @@
         const SUPABASE_URL = 'https://qhpzqtwzifgthwovkpwp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHpxdHd6aWZndGh3b3ZrcHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjkzMzMsImV4cCI6MjA4ODQwNTMzM30.rgo0X-UWShZAAyvi9hRqSka44ZIJ-2GlvTNsxkFBKgU';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        const TINYPESA_API_KEY = 'YOUR_REVEALED_TINYPESA_KEY'; // From your TinyPesa Dashboard eye icon
         const ADMIN_EMAIL = 'rashidray082@gmail.com';
-        const TINYPESA_KEY = 'F0cobpjG2ViUX1CoXfnNjJSVGKVDN7rOJZnzbB-q'; 
 
-        let cart = JSON.parse(localStorage.getItem('bahari_cart')) || [];
+        let cart = [];
         let allProducts = [];
         let isLoginMode = true;
 
@@ -71,7 +73,7 @@
             const { data: { user } } = await _supabase.auth.getUser();
             if (user) {
                 const name = user.user_metadata.display_name || user.email.split('@')[0];
-                document.getElementById('userNameDisplay').innerText = `Welcome, ${name}`;
+                document.getElementById('userNameDisplay').innerText = `Hello, ${name}`;
                 document.getElementById('authBtn').innerText = "Logout";
                 document.getElementById('authBtn').onclick = () => _supabase.auth.signOut().then(()=>location.reload());
                 if(user.email === ADMIN_EMAIL) document.getElementById('adminDashBtn').style.display = 'block';
@@ -79,20 +81,21 @@
         }
 
         async function loadProducts() {
-            const { data } = await _supabase.from('products').select('*').order('name');
+            // NOTE: Ensure your RLS Policy for 'products' table is set to 'true' for 'SELECT'
+            const { data, error } = await _supabase.from('products').select('*').order('name');
             if (data) { allProducts = data; renderProducts(data); }
         }
 
         function renderProducts(items) {
             const grid = document.getElementById('productGrid');
             grid.innerHTML = items.map(p => `
-                <div class="fish-card">
-                    <img src="${p.image_url}" class="fish-img" onerror="this.src='https://via.placeholder.com/300x200?text=Fresh+Catch'">
-                    <div class="card-info">
-                        <small style="color:var(--accent); font-weight:800;">${p.category.toUpperCase()}</small>
-                        <h3 style="margin:10px 0;">${p.name}</h3>
-                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary);">KSh ${p.price.toLocaleString()}</div>
-                        <button class="buy-btn" onclick="addToCart(${p.id})" style="background:var(--primary); color:white; width:100%; padding:12px; border:none; border-radius:12px; font-weight:800; margin-top:15px; cursor:pointer;">Add to Basket</button>
+                <div class="fish-card" style="background:white; border-radius:20px; overflow:hidden; box-shadow:0 10px 20px rgba(0,0,0,0.05); transition:0.3s;">
+                    <img src="${p.image_url}" style="width:100%; height:200px; object-fit:cover;">
+                    <div style="padding:20px;">
+                        <small style="color:#2e7d32; font-weight:bold; letter-spacing:1px;">${p.category.toUpperCase()}</small>
+                        <h3 style="margin:10px 0; color:#333;">${p.name}</h3>
+                        <div style="font-size:1.5rem; font-weight:900; color:var(--primary);">KSh ${p.price.toLocaleString()}</div>
+                        <button onclick="addToCart(${p.id})" style="width:100%; margin-top:15px; padding:12px; border-radius:12px; border:none; background:var(--primary); color:white; font-weight:bold; cursor:pointer;">Add to Basket</button>
                     </div>
                 </div>
             `).join('');
@@ -100,11 +103,7 @@
 
         async function addToCart(id) {
             const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) {
-                alert("Please login to start shopping!");
-                openModal('authModal');
-                return;
-            }
+            if (!user) { alert("Please login to start shopping!"); openModal('authModal'); return; }
             const p = allProducts.find(x => x.id === id);
             cart.push(p);
             updateCart();
@@ -112,12 +111,11 @@
         }
 
         function updateCart() {
-            localStorage.setItem('bahari_cart', JSON.stringify(cart));
             document.getElementById('cart-count').innerText = cart.length;
             document.getElementById('cart-items-list').innerHTML = cart.map((item, index) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom: 1px solid #eee;">
-                    <div><strong>${item.name}</strong><br><small>KSh ${item.price.toLocaleString()}</small></div>
-                    <button onclick="removeFromCart(${index})" style="background:none; border:none; color:red; font-size:1.2rem; cursor:pointer;">✕</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px solid #eee;">
+                    <div><b>${item.name}</b><br><small>KSh ${item.price.toLocaleString()}</small></div>
+                    <button onclick="removeFromCart(${index})" style="background:none; border:none; color:#ff4d4d; cursor:pointer; font-weight:bold;">Remove</button>
                 </div>
             `).join('');
             document.getElementById('cart-total-price').innerText = `Total: KSh ${cart.reduce((sum, i) => sum + i.price, 0).toLocaleString()}`;
@@ -127,52 +125,65 @@
 
         async function processMpesa() {
             const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) return alert("Please login first.");
-
             const phone = document.getElementById('mpesa-phone').value;
             const amount = cart.reduce((sum, i) => sum + i.price, 0);
-            if(!phone.startsWith('254') || phone.length < 12) return alert("Format: 2547XXXXXXXX");
-            if(amount === 0) return alert("Basket is empty");
+
+            if (amount <= 0) return alert("Basket is empty");
+            if (!phone.startsWith('254') || phone.length < 12) return alert("Format: 2547XXXXXXXX");
 
             const btn = document.getElementById('payBtn');
-            btn.innerText = "SENDING PIN PROMPT...";
+            btn.innerText = "SENDING PROMPT...";
             btn.disabled = true;
 
             try {
-                // REAL STK PUSH via TinyPesa
-                const res = await fetch("https://tinypesa.com/api/v1/pn/pay", {
+                // PROFESSIONAL PRODUCTION CALL (Direct to TinyPesa)
+                const response = await fetch("https://tinypesa.com/api/v1/pn/pay", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "Apikey": TINYPESA_KEY },
-                    body: JSON.stringify({ amount: amount, msisdn: phone, account_no: "Bahari-" + Date.now().toString().slice(-4) })
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        "Apikey": TINYPESA_API_KEY 
+                    },
+                    body: JSON.stringify({ 
+                        amount: amount, 
+                        msisdn: phone, 
+                        account_no: "Bahari-" + Date.now().toString().slice(-4) 
+                    })
                 });
 
-                if (res.ok) {
+                if (response.ok) {
                     await _supabase.from('orders').insert([{ 
-                        customer_phone: phone, items: cart.map(i => i.name).join(', '), 
-                        total_price: amount, status: 'pending_payment'
+                        customer_phone: phone, 
+                        items: cart.map(i => i.name).join(', '), 
+                        total_price: amount, 
+                        status: 'pending_payment',
+                        user_id: user.id
                     }]);
-                    alert("🔒 Check your phone for the PIN prompt!");
-                    cart = []; updateCart(); location.reload();
-                } else { alert("M-Pesa error. Please try again."); }
-            } catch (e) { alert("Error: " + e.message); }
-            btn.disabled = false; btn.innerText = "Confirm Order";
+                    alert("✅ Success! Please check your phone for the M-Pesa PIN prompt.");
+                    cart = []; updateCart(); toggleCart();
+                } else {
+                    alert("M-Pesa Service Error. Please try again later.");
+                }
+            } catch (err) {
+                alert("Connection Error. Please ensure you are on a secure (HTTPS) connection.");
+            }
+            btn.disabled = false; btn.innerText = "CONFIRM & PAY";
         }
 
         async function handleAuth(e) {
             e.preventDefault();
             const email = document.getElementById('userEmail').value;
             const password = document.getElementById('userPass').value;
-            const displayName = document.getElementById('display_name').value;
-            let res = isLoginMode ? 
-                await _supabase.auth.signInWithPassword({ email, password }) : 
-                await _supabase.auth.signUp({ email, password, options: { data: { display_name: displayName } } });
+            const name = document.getElementById('display_name').value;
+            const res = isLoginMode ? 
+                await _supabase.auth.signInWithPassword({ email, password }) :
+                await _supabase.auth.signUp({ email, password, options: { data: { display_name: name } } });
             
             if (res.error) alert(res.error.message); else location.reload();
         }
 
         function toggleAuthMode() { 
             isLoginMode = !isLoginMode; 
-            document.getElementById('authTitle').innerText = isLoginMode ? 'Login' : 'Create Account'; 
+            document.getElementById('authTitle').innerText = isLoginMode ? 'Login' : 'Join Bahari Fresh';
             document.getElementById('display_name').style.display = isLoginMode ? 'none' : 'block';
         }
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
@@ -183,7 +194,7 @@
             renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(val)));
         }
 
-        document.addEventListener('DOMContentLoaded', () => { checkUser(); loadProducts(); updateCart(); });
+        window.onload = () => { checkUser(); loadProducts(); };
     </script>
 </body>
 </html>
